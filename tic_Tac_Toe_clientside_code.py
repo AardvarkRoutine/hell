@@ -14,7 +14,7 @@ gameID = 0
 sub_canvases = []
 PlayerX = False
 PlayerO = False
-ip = "http://localhost:5000"
+ip = "http://192.168.178.62:5000"
 notify = Label(root, text="", font=("Arial", 15), wraplength=150)
 
 
@@ -63,28 +63,18 @@ def newGame():
     game_full = False
     while not game_full:
         response = r.get(ip + "/game/" + str(gameID))
-        if response.status_code == 200:
-            game = response.json()
-            if game['player_o'] is not None:
-                game_full = True
-                clearScreen()
-                stdGameLoop()
-            else:
-                notify.config(text="Waiting for player O to join")
-                t.sleep(1)
-        else:
+        game = response.json()
+        if game['player_o'] is not None:
+            game_full = True
             clearScreen()
-            startScreen()
-            notify.config(text="Game not found")
+            stdGameLoop()
+        else:
+            notify.config(text=response.json()["error"])
+            root.update()
             t.sleep(1)
 
 
-                
-
-    
-
 def joinGame():
-    pass
 
 
 def stdGameLoop():

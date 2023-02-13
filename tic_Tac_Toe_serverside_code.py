@@ -45,9 +45,38 @@ def make_move(game_id):
         return jsonify({'winner': winner})
     return jsonify({'board': board})
 
+@app.route('/game_status/<int:game_id>', methods=['GET'])
+def game_status(game_id):
+    if game_id not in games:
+        return jsonify({'error': 'Spiel nicht gefunden'}), 404
+
+    game = games[game_id]
+    board = game['board']
+    x_count = board.count('X')
+    o_count = board.count('O')
+
+    if x_count <= o_count:
+        current_player = 'X'
+    else:
+        current_player = 'O'
+
+    return jsonify({'board': board, 'current_player': current_player})
+
 def check_winner(board):
-    # Überprüfen Sie hier, ob ein Spieler gewonnen hat
-    return None # Kein Sieger
+    winning_combinations = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  # rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  # columns
+        [0, 4, 8], [2, 4, 6]  # diagonals
+    ]
+    for combination in winning_combinations:
+        if all(board[i] == 'X' for i in combination):
+            return 'X'
+        if all(board[i] == 'O' for i in combination):
+            return 'O'
+    if '-' not in board:
+        return 'tie'
+    return None
 
 if __name__ == '__main__':
     app.run()
+
