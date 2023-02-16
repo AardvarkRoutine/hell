@@ -1,16 +1,18 @@
 from tkinter import *
 import random as ra
 import time as t
-import requests as r
+import requests as req
 
 root = Tk()
 root.title("9 Tic Tac Toe MP")
 root.geometry("590x600")
 
-global notify, game_id, sub_canvases
+global notify, game_id, sub_canvases, playerX, playerO
 notify = Label(root, text="", font=("Arial", 15), wraplength=150, bg="grey80")
 game_id = ra.randint(10, 99) # CHANGE FOR REAL IMPLEMENTATION
 sub_canvases = []
+playerX = False
+playerO = False
 
 
 def clearScreen():
@@ -56,8 +58,28 @@ def newGame():
     notify.grid(row=2, column=0, rowspan=2, columnspan=3, padx=10, pady=10)
     notify.config(text="Notification field")
     buttonC = Button(root, text="Cancel", font=("Arial", 15), command=cancel)
-    buttonC.grid(row=5, column=0, columnspan=3, padx=10, pady=10)	
-    # start game function here
+    buttonC.grid(row=5, column=0, columnspan=3, padx=10, pady=10)
+    
+    response = req.post("http://" + ip + ":5000/newgame")
+    game_id = response.json()["game_id"]
+    id.config(text=game_id)
+    
+    loop = True
+    while loop == True:
+        response2 = req.get("http://" + ip + ":5000/game_state/" + str(game_id))
+        if response2.status_code == 404:
+            loop = False
+            clearScreen()
+            startScreen()
+            notify.config(text=response2.json()["error"])
+        elif response2.status_code==400:
+            notify.config(text=response2.json()["error"])
+            root.update()  
+            t.sleep(1)
+        else:
+            loop = False
+            mainGame()
+
 
 def joinGame():
     clearScreen()
@@ -71,6 +93,17 @@ def joinGame():
     join.grid(row=4, column=0, columnspan=3, padx=10, pady=10)
     buttonC = Button(root, text="Cancel", font=("Arial", 15), command=cancel)
     buttonC.grid(row=5, column=0, columnspan=3, padx=10, pady=10)
+    
+    response = req.post("http://" + ip + ":5000/join_game/" + str(id.get()))
+    if response.status_code == 404 or response.status_code == 400:
+        clearScreen()
+        startScreen()
+        notify.config(text=response.json()["error"])
+    else:
+        if game_id == response.json()["game_id"]:
+            id.config(text=game_id)
+            playerO = True
+            mainGame()
 
 def mainGame():
     clearScreen()
@@ -100,26 +133,29 @@ def mainGame():
         #API IMPLEMENTATION HERE
         pass
 
+    button0 = Button(root, font=("Arial", 15), command=lambda: buttonPress(0), width=5, height=2)
+    button1 = Button(root, font=("Arial", 15), command=lambda: buttonPress(1), width=5, height=2)
+    button2 = Button(root, font=("Arial", 15), command=lambda: buttonPress(2), width=5, height=2)
+    button3 = Button(root, font=("Arial", 15), command=lambda: buttonPress(3), width=5, height=2)
+    button4 = Button(root, font=("Arial", 15), command=lambda: buttonPress(4), width=5, height=2)
+    button5 = Button(root, font=("Arial", 15), command=lambda: buttonPress(5), width=5, height=2)
+    button6 = Button(root, font=("Arial", 15), command=lambda: buttonPress(6), width=5, height=2)
+    button7 = Button(root, font=("Arial", 15), command=lambda: buttonPress(7), width=5, height=2)
+    button8 = Button(root, font=("Arial", 15), command=lambda: buttonPress(8), width=5, height=2)
 
-    button0 = Button(root, font=("Arial", 15), command=lambda: buttonPress(0))
-    button1 = Button(root, font=("Arial", 15), command=lambda: buttonPress(1))
-    button2 = Button(root, font=("Arial", 15), command=lambda: buttonPress(2))
-    button3 = Button(root, font=("Arial", 15), command=lambda: buttonPress(3))
-    button4 = Button(root, font=("Arial", 15), command=lambda: buttonPress(4))
-    button5 = Button(root, font=("Arial", 15), command=lambda: buttonPress(5))
-    button6 = Button(root, font=("Arial", 15), command=lambda: buttonPress(6))
-    button7 = Button(root, font=("Arial", 15), command=lambda: buttonPress(7))
-    button8 = Button(root, font=("Arial", 15), command=lambda: buttonPress(8))
+    root.geometry("590x670")
 
-    button0.grid(row=3, column=0, padx=10, pady=10, sticky=NSEW)
-    button1.grid(row=3, column=1, padx=10, pady=10, sticky=NSEW)
-    button2.grid(row=3, column=2, padx=10, pady=10, sticky=NSEW)
-    button3.grid(row=4, column=0, padx=10, pady=10, sticky=NSEW)
-    button4.grid(row=4, column=1, padx=10, pady=10, sticky=NSEW)
-    button5.grid(row=4, column=2, padx=10, pady=10, sticky=NSEW)
-    button6.grid(row=5, column=0, padx=10, pady=10, sticky=NSEW)
-    button7.grid(row=5, column=1, padx=10, pady=10, sticky=NSEW)
-    button8.grid(row=5, column=2, padx=10, pady=10, sticky=NSEW)
+    button0.grid(row=3, column=0, padx=10, pady=10)
+    button1.grid(row=3, column=1, padx=10, pady=10)
+    button2.grid(row=3, column=2, padx=10, pady=10)
+    button3.grid(row=4, column=0, padx=10, pady=10)
+    button4.grid(row=4, column=1, padx=10, pady=10)
+    button5.grid(row=4, column=2, padx=10, pady=10)
+    button6.grid(row=5, column=0, padx=10, pady=10)
+    button7.grid(row=5, column=1, padx=10, pady=10)
+    button8.grid(row=5, column=2, padx=10, pady=10)
+    notify.grid(row=0, column=3, rowspan=2, columnspan=2, padx=10, pady=10)
+    notify.config(text="Notification field")
 
 startScreen()
 root.mainloop()
